@@ -1,0 +1,215 @@
+PARSER_BEGIN(ejercicio)
+class ejercicio
+{
+
+	public static void main (String[] args) throws ParseException{
+
+		try {
+			ejercicio analizador = new ejercicio(System.in);
+			analizador.programa();
+		}
+		catch(ParseException e) {
+			System.out.println("Error: ");
+			System.out.println(e.getMessage());
+		}
+	}
+}
+PARSER_END(ejercicio)
+
+// Token que conforman al los datos del huracan
+TOKEN : {
+	<IDHURACAN: <OCEANO> <NUMERO> <COMA> > {
+
+		String dato = image.toString();
+		dato = dato.replace(" ", "");
+		matchedToken.image = dato;
+	}
+	| <NOMBREH: (<ESPACIO>)* <LETRAS> ((<GUION> <NUMERO>) | (<ESPACIO>))? <COMA> (<ESPACIO>)* <TRACKENTRIES>  <COMA> (<ESPACIO>)*  > {
+		
+		String nombreHur = image.toString();
+		nombreHur = nombreHur.replace(" ", "");
+		matchedToken.image = nombreHur;
+	}
+
+	/*|<NOMBREHGUION: (<ESPACIO>)* <LETRAS> <GUION> <NUMERO> <COMA> (<ESPACIO>)* <TRACKENTRIES>  <COMA> (<ESPACIO>)*  > {
+		
+		nombreHur = image.toString();
+		nombreHur = nombreHur.replace(" ", "");
+		matchedToken.image = nombreHur;
+	}*/
+	| <SHURACAN: (<ESPACIO> | <IDENTR> | <COMA>)* <COMA> <ESPACIO> <TIPOH> <COMA> > { 
+		
+		String indetificador = image.toString();
+		String[] recorID = indetificador.split(",",2);
+
+
+		recorID[0] = recorID[0].replace(" ", "");
+		if ( recorID[0].isEmpty() )
+		{
+			recorID[0] = "na";
+		}else{recorID[1] = recorID[1].replace(" ","");}
+
+		matchedToken.image = recorID[0] + "," + recorID[1];
+	}
+	| <FECHAHUR: <ANIO> <MES> <DIA> <COMA> <ESPACIO> <HORA> <COMA> <ESPACIO> > { 
+		String fechaHur = image.toString();
+		fechaHur = fechaHur.replace(" ", "");
+		matchedToken.image = fechaHur;
+
+	}
+	| <LATITUD:<ESPACIO> <NUMERO> <PUNTO> <NUMERO> <LATI> <COMA> > { 
+		String lat = image.toString();
+		lat = lat.replace(" ", "");
+		matchedToken.image = lat;
+	}
+	| <LONGITUD:<ESPACIO> <NUMERO> <PUNTO> <NUMERO> <LONG> <COMA> > { 
+		String lon = image.toString();
+		lon = lon.replace(" ", "");
+		matchedToken.image = lon;
+	}
+	| <WINDSMAX: (<ESPACIO> <GUION>) + (<GUION>) +( <NUMERO> <COMA>)* >{
+		String windsMaxim = image.toString();
+		windsMaxim = windsMaxim.replace("-999", "null");
+		matchedToken.image = windsMaxim;
+	}
+}
+
+// Tokens para construir la fecha y hora
+TOKEN : {
+	<DIA: ["0"-"3"] ["0"-"9"]> 
+	| <MES:["0"-"1"] ["0"-"9"]>
+	| <ANIO: (["0"-"9"]){4} > 
+	| <HORA: (["0"-"9"])* >
+
+}
+// Tokens reservados para caracteres, letras y numeros
+TOKEN : {
+	<GUION: ("-")* >
+	| <OCEANO: ("AL" | "EP" | "CP")>
+	| <ESPACIO: (" ")+>
+	| <COMA: ([","])* >
+	| <LETRAS:  (["A" - "Z", "a" - "z","-"]){3,} > 
+	| <NUMERO: (["0"-"9"])*>
+	| <TRACKENTRIES: (["0"-"9"]){1,3}>
+	| <PUNTO: ".">
+    | <LATI: ("N" | "S")>
+    | <LONG: ("E" | "W")>
+
+}
+
+// Tokes para identificador y tipo de huracan
+TOKEN : {
+	<IDENTR: "C"|"G"|"I"|"L"|"P"|"R"|"S"|"T"|"W">
+	|<TIPOH:"TD"|"TS"|"HU"|"EX"|"SD"|"SS"|"LO"|"WV"|"DB"| "ET" | "PT" | "ST" | "TY">
+}
+
+
+// Metodo para imprimir el id de cada huracan
+String idHur():
+{
+    Token dato,nombre;
+    String identificadorRegistro = "", aux = "";
+}
+{
+    // Generar cadena de retorno
+    dato = <IDHURACAN>
+    {
+    	aux = dato.image.toString();
+		String al = aux.substring(0,2);
+		String numberHur = aux.substring(2,4);
+		String year = aux.substring(4);
+
+        identificadorRegistro += al + "," + numberHur +"," + year;
+    } 
+    nombre = <NOMBREH>
+    {
+        identificadorRegistro += nombre.image;
+        return identificadorRegistro;
+    }
+
+}
+
+
+void columnas():{}{
+	{System.out.println("ocean,numCycl,year,name,numTrcks,yearTrck,monthTrck,dayTrck,hourTrck,minutsTrck,recordId,statusSys,"
+		+"latitude,longitude,maxSustWin,minPress,34ktNE,34ktSE,34ktSW,34ktNW,50ktNE,50ktSE,50ktSW,50ktNW,64ktNE,64ktSE,64ktSW,64ktNW,radMaxWind");}
+}
+
+void huracan(): {} 
+{
+	<IDHURACAN>	<NOMBREH>
+}
+String datosHur(): 
+{
+	Token fecha,velHuracan, lat, longi, maxVientosSost, minPresion,ktNE34, ktSE34,ktSW34, ktNW34, ktNE50, ktSE50, ktSW50,ktNW50, ktNE64, ktSE64,ktSW64,ktNW64, radMaxWind;;
+	String anio, mes, dia, hora, minutos, cadena = "",dato = "",wind = "";
+	String[] matrizFecha;
+}
+{
+	fecha = <FECHAHUR>
+	{
+
+		dato = fecha.image.toString();
+		matrizFecha = dato.split("," , 2);
+		anio = matrizFecha[0].substring(0,4)+ ",";
+		mes = matrizFecha[0].substring(4,6)+ ",";
+		dia = matrizFecha[0].substring(6)+ ",";
+		hora = matrizFecha[1].substring(0,2) + ",";
+		minutos = matrizFecha[1].substring(2);
+		cadena += anio + mes + dia + hora + minutos;
+	}
+
+	velHuracan = <SHURACAN>	{cadena += velHuracan;}
+	lat = <LATITUD>	{cadena += lat;}
+	longi = <LONGITUD>{cadena += longi;}
+	maxVientosSost = <WINDSMAX> {cadena += maxVientosSost;}
+    minPresion = <WINDSMAX> { cadena += minPresion; }
+    ktNE34 = <WINDSMAX>  { cadena += ktNE34; }
+    ktSE34 = <WINDSMAX> { cadena += ktSE34; }
+    ktSW34 = <WINDSMAX> { cadena += ktSW34; }
+    ktNW34 = <WINDSMAX> { cadena += ktNW34; }
+    ktNE50 = <WINDSMAX> { cadena += ktNE50; }
+    ktSE50 = <WINDSMAX> { cadena += ktSE50; }
+    ktSW50 = <WINDSMAX> { cadena += ktSW50; }
+    ktNW50 = <WINDSMAX> { cadena += ktNW50; }
+    ktNE64 = <WINDSMAX> { cadena += ktNE64; }
+    ktSE64 = <WINDSMAX> { cadena += ktSE64; }
+    ktSW64 = <WINDSMAX> { cadena += ktSW64; }
+    ktNW64 = <WINDSMAX> { cadena += ktNW64; }
+	radMaxWind = <WINDSMAX>	{
+		wind = ktNW64.image.toString();
+    	wind = wind.replace(",", "");
+		cadena += wind;
+
+		return cadena;
+	}
+	 
+
+}
+
+
+void programa():
+{
+    String idH, datosHurReg;
+}
+{
+	( columnas()    
+	    (
+	        idH = idHur()
+	        (
+	        	datosHurReg = datosHur()
+	        	{
+	        		System.out.println(idH + datosHurReg);
+	        	}
+	        )+
+
+	    )+
+	   
+	)+ 
+	<EOF>
+}
+
+
+SKIP: {
+	"\r" | "\t" | "\n" | " "
+}
